@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 import cs336_data.extract
+import cs336_data.identify
 
 
 def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
@@ -12,7 +13,9 @@ def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
 
 
 def run_identify_language(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    # model_path = "/home/shared/lid.176.bin"
+    model_path = "/lfs/ampere2/0/ranjanr/cs336-a4/data/lid.176.bin"
+    return cs336_data.identify.identify_language(model_path, text)
 
 
 def run_mask_emails(text: str) -> tuple[str, int]:
