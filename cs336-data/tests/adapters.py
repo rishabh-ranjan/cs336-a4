@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
+import cs336_data.classify
 import cs336_data.extract
 import cs336_data.identify
 import cs336_data.mask
@@ -32,11 +33,17 @@ def run_mask_ips(text: str) -> tuple[str, int]:
 
 
 def run_classify_nsfw(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    # model_path = "/home/shared/jigsaw_fasttext_bigrams_nsfw_final.bin"
+    model_path = (
+        "/lfs/ampere2/0/ranjanr/cs336-a4/data/jigsaw_fasttext_bigrams_nsfw_final.bin"
+    )
+    return cs336_data.classify.classify_nsfw(model_path, text)
 
 
 def run_classify_toxic_speech(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    # model_path = "/home/shared/jigsaw_fasttext_bigrams_hatespeech_final.bin"
+    model_path = "/lfs/ampere2/0/ranjanr/cs336-a4/data/jigsaw_fasttext_bigrams_hatespeech_final.bin"
+    return cs336_data.classify.classify_toxic_speech(model_path, text)
 
 
 def run_classify_quality(text: str) -> tuple[Any, float]:
