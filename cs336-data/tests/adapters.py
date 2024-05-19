@@ -6,6 +6,7 @@ from typing import Any
 
 import cs336_data.extract
 import cs336_data.identify
+import cs336_data.mask
 
 
 def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
@@ -19,7 +20,7 @@ def run_identify_language(text: str) -> tuple[Any, float]:
 
 
 def run_mask_emails(text: str) -> tuple[str, int]:
-    raise NotImplementedError
+    return cs336_data.mask.mask_emails(text)
 
 
 def run_mask_phone_numbers(text: str) -> tuple[str, int]:
