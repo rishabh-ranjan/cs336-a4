@@ -8,13 +8,17 @@ from resiliparse.parse.encoding import detect_encoding
 
 
 def extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
-    encoding = detect_encoding(html_bytes)
-    html_str = html_bytes.decode(encoding)
+    try:
+        # assume utf-8 for efficiency
+        html_str = html_bytes.decode()
+    except UnicodeDecodeError:
+        encoding = detect_encoding(html_bytes)
+        html_str = html_bytes.decode(encoding, errors="replace")
     text = extract_plain_text(html_str)
     return text
 
 
-def extract_html_from_warc_gz(
+def extract_text_from_warc_gz(
     warc_gz_path: str | os.PathLike, out_dir: str | os.PathLike
 ) -> None:
     Path(out_dir).mkdir(parents=True)
@@ -25,6 +29,7 @@ def extract_html_from_warc_gz(
                 if record.http_content_type != "text/html":
                     continue
                 html_bytes = record.reader.read()
+                text = extract_text_from_html_bytes(html_bytes)
                 count += 1
-                with open(f"{out_dir}/{count}.html", "wb") as f:
-                    f.write(html_bytes)
+                with open(f"{out_dir}/{count}.txt", "w") as f:
+                    f.write(text)
