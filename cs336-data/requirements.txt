@@ -1,3 +1,4 @@
 xopen
 resiliparse
 fasttext @ git+https://github.com/facebookresearch/fastText
+warcio
