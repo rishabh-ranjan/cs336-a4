@@ -6,3 +6,4 @@ pandas
 tabulate
 matplotlib
 phonenumbers
+nltk

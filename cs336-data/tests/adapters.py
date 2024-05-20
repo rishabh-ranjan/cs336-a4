@@ -6,6 +6,7 @@ from typing import Any
 
 import cs336_data.classify
 import cs336_data.extract
+import cs336_data.gopher
 import cs336_data.identify
 import cs336_data.mask
 
@@ -51,7 +52,7 @@ def run_classify_quality(text: str) -> tuple[Any, float]:
 
 
 def run_gopher_quality_filter(text: str) -> bool:
-    raise NotImplementedError
+    return cs336_data.gopher.gopher_quality_filter(text)
 
 
 def run_exact_line_deduplication(
