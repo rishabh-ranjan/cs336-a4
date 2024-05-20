@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 import cs336_data.classify
+import cs336_data.dedup
 import cs336_data.extract
 import cs336_data.gopher
 import cs336_data.identify
@@ -58,7 +59,7 @@ def run_gopher_quality_filter(text: str) -> bool:
 def run_exact_line_deduplication(
     input_files: list[os.PathLike], output_directory: os.PathLike
 ):
-    raise NotImplementedError
+    cs336_data.dedup.exact_line_dedup(input_files, output_directory)
 
 
 def run_minhash_deduplication(
