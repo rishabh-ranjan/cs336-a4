@@ -1,3 +1,4 @@
+from collections import defaultdict
 import itertools
 from pathlib import Path
 import random
@@ -217,7 +218,7 @@ def fuzzy_dedup(
 ):
     assert num_hashes % num_bands == 0
     band_size = num_hashes // num_bands
-    band_wise_bucket_dict = [{} for _ in range(num_bands)]
+    band_wise_bucket_dict = [defaultdict(list) for _ in range(num_bands)]
     for in_path in in_path_list:
         with open(in_path, "r") as in_f:
             text = in_f.read()
@@ -231,15 +232,15 @@ def fuzzy_dedup(
             hash_end_idx = (band_idx + 1) * band_size
             key = tuple(min_hash_sig[hash_beg_idx:hash_end_idx])
             val = in_path
-            band_wise_bucket_dict[band_idx][key] = val
+            band_wise_bucket_dict[band_idx][key].append(val)
 
     candidate_pairs = set()
     for bucket_dict in band_wise_bucket_dict:
-        bucket = bucket_dict.values()
-        if len(bucket) == 1:
-            continue
-        for pair in itertools.combinations(bucket, 2):
-            candidate_pairs.add(pair)
+        for bucket in bucket_dict.values():
+            if len(bucket) == 1:
+                continue
+            for pair in itertools.combinations(bucket, 2):
+                candidate_pairs.add(pair)
 
     if jaccard_threshold is None:
         jaccard_threshold = (1 / num_bands) ** (1 / band_size)
