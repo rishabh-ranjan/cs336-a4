@@ -8,3 +8,4 @@ matplotlib
 phonenumbers
 nltk
 beautifulsoup4
+lxml

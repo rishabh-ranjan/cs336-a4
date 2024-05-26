@@ -39,17 +39,23 @@ def run_classify_nsfw(text: str) -> tuple[Any, float]:
     model_path = (
         "/lfs/ampere2/0/ranjanr/cs336-a4/data/jigsaw_fasttext_bigrams_nsfw_final.bin"
     )
-    return cs336_data.classify.classify_nsfw(model_path, text)
+    return cs336_data.classify.classify(model_path, text)
 
 
 def run_classify_toxic_speech(text: str) -> tuple[Any, float]:
     # model_path = "/home/shared/jigsaw_fasttext_bigrams_hatespeech_final.bin"
     model_path = "/lfs/ampere2/0/ranjanr/cs336-a4/data/jigsaw_fasttext_bigrams_hatespeech_final.bin"
-    return cs336_data.classify.classify_toxic_speech(model_path, text)
+    return cs336_data.classify.classify(model_path, text)
 
 
 def run_classify_quality(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    model_path = "/lfs/ampere2/0/ranjanr/cs336-a4/data/quality.bin"
+    label, prob = cs336_data.classify.classify_quality(model_path, text)
+    if label == "neg":
+        label = "cc"
+    elif label == "pos":
+        label = "wiki"
+    return label, prob
 
 
 def run_gopher_quality_filter(text: str) -> bool:
