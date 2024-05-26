@@ -9,3 +9,5 @@ phonenumbers
 nltk
 beautifulsoup4
 lxml
+mmh3
+networkx

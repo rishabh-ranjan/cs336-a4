@@ -10,6 +10,7 @@ import cs336_data.extract
 import cs336_data.gopher
 import cs336_data.identify
 import cs336_data.mask
+import cs336_data.fast
 
 
 def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
@@ -76,4 +77,11 @@ def run_minhash_deduplication(
     jaccard_threshold: float,
     output_directory: os.PathLike,
 ):
-    raise NotImplementedError
+    cs336_data.fast.fuzzy_dedup(
+        in_path_list=input_files,
+        num_hashes=num_hashes,
+        num_bands=num_bands,
+        num_words_n_gram=ngrams,
+        out_dir=output_directory,
+        jaccard_threshold=jaccard_threshold,
+    )
