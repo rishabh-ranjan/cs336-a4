@@ -7,3 +7,4 @@ tabulate
 matplotlib
 phonenumbers
 nltk
+beautifulsoup4

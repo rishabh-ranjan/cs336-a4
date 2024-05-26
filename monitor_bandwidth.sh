@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# interface="enp139s0f0"
-interface="enp44s0f0"
+interface="enp139s0f0"
+# interface="enp44s0f0"
 interval=1  # Interval in seconds
 
 while true; do
