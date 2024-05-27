@@ -447,7 +447,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--device",
-        required=True,
+        required=False,
         help="Device to use for training (e.g., 'cpu', 'cuda', 'cuda:0', etc.)",
     )
     parser.add_argument(
@@ -459,9 +459,11 @@ if __name__ == "__main__":
         "--dtype",
         type=str,
         choices=["float32", "float16", "bfloat16"],
-        default="bfloat16"
-        if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
-        else "float16",
+        default=(
+            "bfloat16"
+            if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+            else "float16"
+        ),
         help="dtype to use when training",
     )
     parser.add_argument(

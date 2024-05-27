@@ -1,0 +1,10 @@
+{
+    "vocab_size": 50257,
+    "context_length": 512,
+    "num_layers": 12,
+    "attn_pdrop": 0.1,
+    "d_ff": 3072,
+    "d_model": 768,
+    "num_heads": 12,
+    "residual_pdrop": 0.1
+}
