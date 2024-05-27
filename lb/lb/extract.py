@@ -15,9 +15,6 @@ def content_not_html(record):
 def html_bytes_to_text(html_bytes):
     soup = BeautifulSoup(html_bytes, "lxml")
     text = soup.get_text()
-    # remove empty lines
-    # text = "\n".join(line for line in text.split("\n") if line.strip())
-    # text = text.strip()
     return text
 
 
