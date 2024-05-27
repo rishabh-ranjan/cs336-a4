@@ -9,5 +9,6 @@ description = "code for leaderboard submission"
 dependencies = [
 	"xopen",
 	"transformers",
+	"torch==2.3.0",
 ]
 
