@@ -10,5 +10,6 @@ dependencies = [
 	"xopen",
 	"transformers",
 	"torch==2.3.0",
+	"beautifulsoup4",
 ]
 
