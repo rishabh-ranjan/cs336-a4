@@ -5,6 +5,7 @@ import mmh3
 from bs4 import BeautifulSoup
 from fastwarc.stream_io import GZipStream
 from fastwarc.warc import ArchiveIterator, WarcRecordType
+from tqdm.auto import tqdm
 
 
 def content_not_html(record):
@@ -14,6 +15,9 @@ def content_not_html(record):
 def html_bytes_to_text(html_bytes):
     soup = BeautifulSoup(html_bytes, "lxml")
     text = soup.get_text()
+    # remove empty lines
+    # text = "\n".join(line for line in text.split("\n") if line.strip())
+    # text = text.strip()
     return text
 
 
@@ -29,6 +33,15 @@ def warc_gz_to_text_iter(warc_gz_file):
                 html_bytes = record.reader.read()
                 text = html_bytes_to_text(html_bytes)
                 yield text
+
+
+def warc_gz_to_text_file(warc_gz_file, text_file):
+    with open(text_file, "w") as out_f:
+        with tqdm(total=100_000) as pbar:
+            for text in warc_gz_to_text_iter(warc_gz_file):
+                out_f.write(text)
+                out_f.write("\n<|endoftext|>")
+                pbar.update(1)
 
 
 def get_line_hash_freq_dict(warc_gz_file):
