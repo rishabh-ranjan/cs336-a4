@@ -17,6 +17,7 @@ def exact_line_dedup(dup_file, in_file, out_file):
             dups.append(h)
 
     dups = set(dups)
+
     with open(in_file, "r") as in_f, open(out_file, "w") as out_f:
         for line in in_f:
             if line == "\n":

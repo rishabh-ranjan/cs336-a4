@@ -6,10 +6,19 @@ import multiprocessing as mp
 
 import fasttext
 from huggingface_hub import hf_hub_download
+import mmh3
 from tqdm.auto import tqdm
 
 
-def filter_english(in_file, out_file):
+def filter(dup_file, in_file, out_file):
+    dups = []
+    with open(dup_file, "r") as in_f:
+        for line in in_f:
+            h = int(line)
+            dups.append(h)
+
+    dups = set(dups)
+
     model_path = hf_hub_download(
         repo_id="facebook/fasttext-language-identification",
         filename="model.bin",
@@ -25,12 +34,19 @@ def filter_english(in_file, out_file):
                 if label[0] == "__label__eng_Latn" and prob[0] > 0.8:
                     out_f.write(buf)
                     out_f.write(line)
+                    buf = ""
             else:
+                if line == "\n":
+                    continue
+                h = mmh3.hash(line)
+                if h in dups:
+                    continue
                 buf += line
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dup_file", type=str, required=True)
     parser.add_argument("--in_dir", type=str, required=True)
     parser.add_argument("--out_dir", type=str, required=True)
     parser.add_argument("--max_workers", type=int, default=os.cpu_count())
@@ -50,7 +66,7 @@ def main():
         futures = []
         for in_file in tqdm(in_files, "submit"):
             out_file = f"{args.out_dir}/{in_file.name}"
-            future = executor.submit(filter_english, in_file, out_file)
+            future = executor.submit(filter, args.dup_file, in_file, out_file)
             futures.append(future)
 
         for future in tqdm(futures, "result"):
