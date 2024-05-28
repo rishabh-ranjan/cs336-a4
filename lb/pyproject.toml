@@ -11,5 +11,6 @@ dependencies = [
 	"transformers",
 	"torch==2.3.0",
 	"beautifulsoup4",
+	"cchardet",
 ]
 

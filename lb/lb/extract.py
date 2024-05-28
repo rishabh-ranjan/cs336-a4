@@ -1,11 +1,16 @@
+import warnings
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
 import mmh3
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning, XMLParsedAsHTMLWarning
 from fastwarc.stream_io import GZipStream
 from fastwarc.warc import ArchiveIterator, WarcRecordType
 from tqdm.auto import tqdm
+
+warnings.filterwarnings("error", category=MarkupResemblesLocatorWarning)
+warnings.filterwarnings("error", category=XMLParsedAsHTMLWarning)
 
 
 def content_not_html(record):
@@ -28,16 +33,19 @@ def warc_gz_to_text_iter(warc_gz_file):
             )
             for record in archive_iterator:
                 html_bytes = record.reader.read()
-                text = html_bytes_to_text(html_bytes)
+                try:
+                    text = html_bytes_to_text(html_bytes)
+                except (MarkupResemblesLocatorWarning, XMLParsedAsHTMLWarning):
+                    continue
                 yield text
 
 
-def warc_gz_to_text_file(warc_gz_file, text_file):
-    with open(text_file, "w") as out_f:
-        with tqdm(total=100_000) as pbar:
-            for text in warc_gz_to_text_iter(warc_gz_file):
-                out_f.write(text)
-                out_f.write("\n<|endoftext|>")
+def warc_gz_to_text_file(warc_gz_file, text_file, tqdm_disable=False):
+    Path(text_file).parent.mkdir(parents=True, exist_ok=True)
+    with tqdm(total=100_000, disable=tqdm_disable) as pbar:
+        with open(text_file, "w") as out_f:
+            for i, text in enumerate(warc_gz_to_text_iter(warc_gz_file)):
+                out_f.write(f"{text}\n<|endoftext|>\n")
                 pbar.update(1)
 
 
