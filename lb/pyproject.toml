@@ -15,5 +15,6 @@ dependencies = [
 	"mmh3",
 	"fastwarc",
 	"lxml",
+	"huggingface_hub",
 ]
 
