@@ -19,16 +19,18 @@ def exact_line_dedup(dup_file, in_file, out_file):
     dups = set(dups)
 
     with open(in_file, "r") as in_f, open(out_file, "w") as out_f:
-        for line in in_f:
-            if line == "\n":
-                continue
-            if line == "<|endoftext|>\n":
+        with tqdm(total=Path(in_file).stat().st_size) as pbar:
+            for line in in_f:
+                pbar.update(len(line.encode())
+                if line == "\n":
+                    continue
+                if line == "<|endoftext|>\n":
+                    out_f.write(line)
+                    continue
+                h = mmh3.hash(line)
+                if h in dups:
+                    continue
                 out_f.write(line)
-                continue
-            h = mmh3.hash(line)
-            if h in dups:
-                continue
-            out_f.write(line)
 
 
 def main():
