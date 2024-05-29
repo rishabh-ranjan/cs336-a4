@@ -18,6 +18,7 @@ def decompress(in_file, out_file):
 
 
 def concurrent_compress(in_dir, out_dir, max_workers=None):
+    mp.set_start_method("forkserver")
     if max_workers is None:
         max_workers = os.cpu_count()
 
@@ -38,6 +39,7 @@ def concurrent_compress(in_dir, out_dir, max_workers=None):
 
 
 def concurrent_decompress(in_dir, out_dir, max_workers=None):
+    mp.set_start_method("forkserver")
     if max_workers is None:
         max_workers = os.cpu_count()
 

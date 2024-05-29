@@ -54,6 +54,7 @@ def worker(dup_file, model_file, in_file, out_file):
 
 
 def master(dup_file, model_file, in_dir, out_dir, max_workers):
+    mp.set_start_method("forkserver")
     in_files = sorted(Path(in_dir).iterdir())
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = []
