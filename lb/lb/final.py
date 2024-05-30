@@ -58,7 +58,9 @@ def is_high_quality(doc):
     if len(bullet_lines) / len(lines) > 0.9:
         return False
 
-    ellipsis_lines = [line for line in lines if line.endswith("...")]
+    ellipsis_lines = [
+        line for line in lines if line.endswith("...") or line.endswith("…")
+    ]
     if len(ellipsis_lines) / len(lines) > 0.3:
         return False
 
@@ -83,8 +85,9 @@ def is_high_quality(doc):
         return False
 
     count = 0
-    for word in ["the", "be", "to", "of", "and", "that", "have", "with"]:
-        count += word in doc
+    for word in ["the", "be", "to", "of", "that", "have", "with"]:  # removed "and"
+        if word in words:
+            count += 1
     if count < 2:
         return False
 
@@ -122,7 +125,9 @@ def worker(in_file, out_file, tqdm_disable=False):
                 if is_dup(line_bytes):
                     continue
 
-                if last_line_bytes == line_bytes:
+                if last_line_bytes is not None and last_line_bytes.strip().startswith(
+                    line_bytes.strip()
+                ):
                     continue
                 last_line_bytes = line_bytes
 
