@@ -46,6 +46,10 @@ def master(in_dir, out_file, max_workers=None, tqdm_disable=True):
         # context has already been set
         pass
 
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     in_files = list(Path(in_dir).iterdir())
     with tempfile.TemporaryDirectory() as temp_dir:
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
