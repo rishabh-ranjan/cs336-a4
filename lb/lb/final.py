@@ -19,7 +19,7 @@ def is_dup(line_bytes):
             hash_count = in_f.read()
 
     line_hash = mmh3.hash(line_bytes)
-    return hash_count[line_hash] == 2
+    return hash_count[line_hash] >= 10
 
 
 def initializer():

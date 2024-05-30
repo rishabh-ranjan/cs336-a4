@@ -21,7 +21,7 @@ def worker(in_file, shm_name, tqdm_disable=False):
 
             line_hash = mmh3.hash(line, signed=False)
             old_count = hash_count[line_hash]
-            if old_count < 2:
+            if old_count < 255:
                 hash_count[line_hash] = old_count + 1
 
     shm.close()
