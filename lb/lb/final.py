@@ -36,12 +36,12 @@ def initializer():
 
 def is_toxic(line):
     labels, scores = toxic_model.predict(line.rstrip())
-    return labels[0] == "__label__toxic" and scores[0] > 0.0004
+    return labels[0] == "__label__toxic" and scores[0] > 0.4
 
 
 def is_nsfw(line):
     labels, scores = nsfw_model.predict(line.rstrip())
-    return labels[0] == "__label__nsfw" and scores[0] > 0.00017
+    return labels[0] == "__label__nsfw" and scores[0] > 0.4
 
 
 def is_english(doc):
@@ -61,33 +61,23 @@ def is_high_quality(doc):
 
     bullet_lines = [line for line in lines if line.startswith("•")]
     if len(bullet_lines) / len(lines) > 0.9:
-        with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-            f.write("\n === trigger: bullet ===\n")
         return False
 
     ellipsis_lines = [line for line in lines if line.endswith("...")]
     if len(ellipsis_lines) / len(lines) > 0.3:
-        with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-            f.write("\n === trigger: ellipsis ===\n")
         return False
 
     words = nltk.word_tokenize(doc)
     if len(words) < 50 or len(words) > 100_000:
-        with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-            f.write("\n === trigger: num words ===\n")
         return False
 
     word_lengths = sorted(len(word) for word in words)
     median_word_length = word_lengths[len(word_lengths) // 2]
     if median_word_length < 3 or median_word_length > 10:
-        with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-            f.write("\n === trigger: median word length ===\n")
         return False
 
     alpha_words = [word for word in words if at_least_one_alpha(word)]
     if len(alpha_words) / len(words) < 0.8:
-        with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-            f.write("\n === trigger: alpha ===\n")
         return False
 
     spl_punct = [".", "?", "!", '"']
@@ -95,15 +85,7 @@ def is_high_quality(doc):
         line for line in lines if line == "" or line[-1] not in spl_punct
     ]
     if len(non_spl_punct_lines) / len(lines) > 0.5:
-        with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-            f.write("\n === trigger: spl punct ===\n")
         return False
-
-    # for req in ["the", "be", "to", "of", "and", "that", "have", "with"]:
-    #     if doc.count(req) < 2:
-    #         with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
-    #             f.write("\n === trigger: required words ===\n")
-    #         return False
 
     return True
 

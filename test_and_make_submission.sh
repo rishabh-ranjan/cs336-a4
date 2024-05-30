@@ -33,6 +33,12 @@ zip -r "$output_file" . \
     -x '*.json' \
     -x '*.out' \
     -x '*.err' \
-    -x '.git*'
+    -x '.git*' \
+    -x 'data/*' \
+    -x 'cs336-data/data/*' \
+    -x 'lb/scratch/*' \
+    -x 'lb/notebooks/*' \
+    -x '*.gz' \
+    -x '*.ipynb'
 
 echo "All files have been compressed into $output_file"
