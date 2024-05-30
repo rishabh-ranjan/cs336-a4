@@ -58,11 +58,10 @@ def is_high_quality(doc):
     lines = [line.strip() for line in doc.split("\n")]
 
     spl_punct = [".", "?", "!", '"']
-    count = 0
-    for line in lines:
-        if line[-1] not in spl_punct:
-            count += 1
-    if count / len(lines) > 0.5:
+    non_spl_punct_lines = [
+        line for line in lines if line == "" or line[-1] not in spl_punct
+    ]
+    if len(non_spl_punct_lines) / len(lines) > 0.5:
         return False
 
     bullet_lines = [line for line in lines if line.startswith("•")]
@@ -112,6 +111,9 @@ def worker(in_file, out_file, tqdm_disable=False):
                 if not is_english(doc):
                     continue
 
+                if not is_high_quality(doc):
+                    continue
+
                 out_f.write(doc)
                 out_f.write("<|endoftext|>\n")
             else:
@@ -125,5 +127,9 @@ def worker(in_file, out_file, tqdm_disable=False):
 
                 if is_nsfw(line):
                     continue
+
+                if not (len(line) >= 2 and line[0].isspace() and not line[1].isspace()):
+                    line = line.lstrip()
+                line = line.rstrip() + "\n"
 
                 buf += line
