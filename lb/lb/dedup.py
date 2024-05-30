@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor
 import multiprocessing as mp
 from multiprocessing.shared_memory import SharedMemory
 from pathlib import Path
@@ -7,13 +8,13 @@ import os
 from tqdm.auto import tqdm
 
 
-def worker(in_file, shm_name):
+def worker(in_file, shm_name, tqdm_disable=False):
     shm = SharedMemory(shm_name)
     hash_count = shm.buf
 
     in_file_size = Path(in_file).stat().st_size
     with open(in_file, "rb") as in_f, tqdm(
-        total=in_file_size, unit="B", unit_scale=True
+        total=in_file_size, unit="B", unit_scale=True, disable=tqdm_disable
     ) as pbar:
         for line in in_f:
             pbar.update(in_f.tell() - pbar.n)
@@ -38,7 +39,7 @@ def master(in_dir, out_file, max_workers=None):
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for in_file in tqdm(in_files, "submit"):
-            future = executor.submit(worker, in_file, shm.name)
+            future = executor.submit(worker, in_file, shm.name, True)
             futures.append(future)
 
         for future in tqdm(futures, "result"):
