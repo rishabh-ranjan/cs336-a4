@@ -1,3 +1,5 @@
+from collections import defaultdict
+import json
 from pathlib import Path
 
 import fasttext
@@ -9,15 +11,19 @@ hash_count = None
 
 
 def is_dup(line_bytes):
+
+    global hash_count
+
+    if hash_count is None:
+        with open("/dev/shm/cc/hash_count.bin", "rb") as in_f:
+            hash_count = in_f.read()
+
     line_hash = mmh3.hash(line_bytes)
     return hash_count[line_hash] >= 10
 
 
 def initializer():
-    global hash_count, english_model, toxic_model, nsfw_model
-
-    with open("/dev/shm/cc/hash_count.bin", "rb") as in_f:
-        hash_count = in_f.read()
+    global english_model, toxic_model, nsfw_model
 
     english_model = fasttext.load_model("/dev/shm/cc/models/lid.176.bin")
     toxic_model = fasttext.load_model(
@@ -85,6 +91,8 @@ def is_high_quality(doc):
 
 
 def worker(in_file, out_file, tqdm_disable=False):
+    reach_count = defaultdict(int)
+    reject_count = defaultdict(int)
     in_file_size = Path(in_file).stat().st_size
     with open(in_file, "rb") as in_f, open(out_file, "w") as out_f, tqdm(
         total=in_file_size, unit="B", unit_scale=True, disable=tqdm_disable
@@ -100,24 +108,44 @@ def worker(in_file, out_file, tqdm_disable=False):
                 if doc == "":
                     continue
 
+                reach_count["not_english"] += 1
                 if not is_english(doc):
+                    reject_count["not_english"] += 1
+                    with open("/dev/shm/cc/inspect/not_english.txt", "a") as f:
+                        f.write(doc)
                     continue
 
+                reach_count["not_high_quality"] += 1
                 if not is_high_quality(doc):
+                    reject_count["not_high_quality"] += 1
+                    with open("/dev/shm/cc/inspect/not_high_quality.txt", "a") as f:
+                        f.write(doc)
                     continue
 
                 out_f.write(doc)
                 out_f.write("<|endoftext|>\n")
             else:
+                reach_count["duplicate"] += 1
                 if is_dup(line_bytes):
+                    reject_count["duplicate"] += 1
+                    with open("/dev/shm/cc/inspect/duplicate.txt", "ab") as f:
+                        f.write(line_bytes)
                     continue
 
                 line = line_bytes.decode("utf-8")
 
+                reach_count["toxic"] += 1
                 if is_toxic(line):
+                    reject_count["toxic"] += 1
+                    with open("/dev/shm/cc/inspect/toxic.txt", "a") as f:
+                        f.write(line)
                     continue
 
+                reach_count["nsfw"] += 1
                 if is_nsfw(line):
+                    reject_count["nsfw"] += 1
+                    with open("/dev/shm/cc/inspect/nsfw.txt", "a") as f:
+                        f.write(line)
                     continue
 
                 if not (len(line) >= 2 and line[0].isspace() and not line[1].isspace()):
@@ -125,3 +153,7 @@ def worker(in_file, out_file, tqdm_disable=False):
                 line = line.rstrip() + "\n"
 
                 buf += line
+
+    with open("/dev/shm/cc/inspect/counts.json", "w") as f:
+        obj = {"reach": reach_count, "reject": reject_count}
+        json.dump(obj, f)
