@@ -1,8 +1,9 @@
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing as mp
+import os
 from pathlib import Path
 
-import fasttext
+from fasttext.FastText import _FastText
 import mmh3
 import nltk
 from tqdm.auto import tqdm
@@ -14,12 +15,12 @@ def initializer():
     with open("/dev/shm/cc/hash_count_255.bin", "rb") as in_f:
         hash_count = in_f.read()
 
-    english_model = fasttext.load_model("/dev/shm/cc/models/lid.176.bin")
-    toxic_model = fasttext.load_model(
-        "/dev/shm/cc/models/jigsaw_fasttext_bigrams_hatespeech_final.bin"
+    english_model = _FastText(model_path="/dev/shm/cc/models/lid.176.bin")
+    toxic_model = _FastText(
+        model_path="/dev/shm/cc/models/jigsaw_fasttext_bigrams_hatespeech_final.bin"
     )
-    nsfw_model = fasttext.load_model(
-        "/dev/shm/cc/models/jigsaw_fasttext_bigrams_nsfw_final.bin"
+    nsfw_model = _FastText(
+        model_path="/dev/shm/cc/models/jigsaw_fasttext_bigrams_nsfw_final.bin"
     )
 
 
@@ -150,7 +151,11 @@ def master(in_dir, out_dir, max_workers=None):
     if max_workers is None:
         max_workers = os.cpu_count()
 
-    mp.set_start_method("forkserver")
+    try:
+        mp.set_start_method("forkserver")
+    except RuntimeError:
+        # context has already been set
+        pass
 
     in_files = list(Path(in_dir).iterdir())
     with ProcessPoolExecutor(
