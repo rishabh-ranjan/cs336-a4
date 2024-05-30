@@ -157,6 +157,9 @@ def master(in_dir, out_dir, max_workers=None):
         # context has already been set
         pass
 
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
     in_files = list(Path(in_dir).iterdir())
     with ProcessPoolExecutor(
         max_workers=max_workers, initializer=initializer
