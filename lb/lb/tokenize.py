@@ -23,7 +23,7 @@ def worker(in_file, temp_dir, tqdm_disable=False):
             if line_bytes == b"<|endoftext|>\n":
                 text = buf.decode("utf-8")
                 buf = b""
-                new_tokens = tokenizer.encode(text)
+                new_tokens = tokenizer.encode(text, disallowed_special=())
                 tokens.extend(new_tokens)
                 tokens.append(tokenizer.eot_token)
             else:
