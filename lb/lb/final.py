@@ -97,13 +97,15 @@ def worker(in_file, out_file, tqdm_disable=False):
     with open(in_file, "rb") as in_f, open(out_file, "w") as out_f, tqdm(
         total=in_file_size, unit="B", unit_scale=True, disable=tqdm_disable
     ) as pbar:
-        buf = set()
+        buf = ""
+        last_line_bytes = None
         for line_bytes in in_f:
             pbar.update(in_f.tell() - pbar.n)
 
             if line_bytes == b"<|endoftext|>\n":
-                doc = "\n".join(list(buf))
-                buf = set()
+                doc = buf
+                buf = ""
+                last_line_bytes = None
 
                 if doc == "":
                     continue
@@ -120,6 +122,10 @@ def worker(in_file, out_file, tqdm_disable=False):
                 if is_dup(line_bytes):
                     continue
 
+                if last_line_bytes == line_bytes:
+                    continue
+                last_line_bytes = line_bytes
+
                 line = line_bytes.decode("utf-8")
 
                 if is_toxic(line):
@@ -132,7 +138,7 @@ def worker(in_file, out_file, tqdm_disable=False):
                     line = line.lstrip()
                 line = line.rstrip() + "\n"
 
-                buf.add(line)
+                buf += line
 
 
 def master(in_dir, out_dir, max_workers=None):
