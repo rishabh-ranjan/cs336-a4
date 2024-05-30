@@ -15,6 +15,9 @@ def initializer():
     with open("/dev/shm/cc/hash_count_255.bin", "rb") as in_f:
         hash_count = in_f.read()
 
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
     english_model = _FastText(model_path="/dev/shm/cc/models/lid.176.bin")
     toxic_model = _FastText(
         model_path="/dev/shm/cc/models/jigsaw_fasttext_bigrams_hatespeech_final.bin"
@@ -156,9 +159,6 @@ def master(in_dir, out_dir, max_workers=None):
     except RuntimeError:
         # context has already been set
         pass
-
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
     in_files = list(Path(in_dir).iterdir())
     with ProcessPoolExecutor(
