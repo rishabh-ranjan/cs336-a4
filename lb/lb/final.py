@@ -1,3 +1,5 @@
+from concurrent.futures import ProcessPoolExecutor
+import multiprocessing as mp
 from pathlib import Path
 
 import fasttext
@@ -5,18 +7,11 @@ import mmh3
 import nltk
 from tqdm.auto import tqdm
 
-hash_count = None
-
-
-def is_dup(line_bytes):
-    line_hash = mmh3.hash(line_bytes)
-    return hash_count[line_hash] >= 10
-
 
 def initializer():
     global hash_count, english_model, toxic_model, nsfw_model
 
-    with open("/dev/shm/cc/hash_count.bin", "rb") as in_f:
+    with open("/dev/shm/cc/hash_count_255.bin", "rb") as in_f:
         hash_count = in_f.read()
 
     english_model = fasttext.load_model("/dev/shm/cc/models/lid.176.bin")
@@ -26,6 +21,12 @@ def initializer():
     nsfw_model = fasttext.load_model(
         "/dev/shm/cc/models/jigsaw_fasttext_bigrams_nsfw_final.bin"
     )
+
+
+def is_dup(line_bytes):
+    line_hash = mmh3.hash(line_bytes)
+    count = hash_count[line_hash]
+    return count >= 5
 
 
 def is_toxic(line):
@@ -81,21 +82,28 @@ def is_high_quality(doc):
     if len(non_spl_punct_lines) / len(lines) > 0.5:
         return False
 
+    count = 0
+    for word in ["the", "be", "to", "of", "and", "that", "have", "with"]:
+        count += word in doc
+    if count < 2:
+        return False
+
     return True
 
 
 def worker(in_file, out_file, tqdm_disable=False):
+    Path(out_file).parent.mkdir(parents=True, exist_ok=True)
     in_file_size = Path(in_file).stat().st_size
     with open(in_file, "rb") as in_f, open(out_file, "w") as out_f, tqdm(
         total=in_file_size, unit="B", unit_scale=True, disable=tqdm_disable
     ) as pbar:
-        buf = ""
+        buf = set()
         for line_bytes in in_f:
             pbar.update(in_f.tell() - pbar.n)
 
             if line_bytes == b"<|endoftext|>\n":
-                doc = buf
-                buf = ""
+                doc = "\n".join(list(buf))
+                buf = set()
 
                 if doc == "":
                     continue
@@ -124,4 +132,24 @@ def worker(in_file, out_file, tqdm_disable=False):
                     line = line.lstrip()
                 line = line.rstrip() + "\n"
 
-                buf += line
+                buf.add(line)
+
+
+def master(in_dir, out_dir, max_workers=None):
+    if max_workers is None:
+        max_workers = os.cpu_count()
+
+    mp.set_start_method("forkserver")
+
+    in_files = list(Path(in_dir).iterdir())
+    with ProcessPoolExecutor(
+        max_workers=max_workers, initializer=initializer
+    ) as executor:
+        futures = []
+        for in_file in tqdm(in_files, "submit"):
+            out_file = f"{out_dir}/{in_file.name}"
+            future = executor.submit(worker, in_file, out_file, True)
+            futures.append(future)
+
+        for future in tqdm(futures, "result"):
+            future.result()

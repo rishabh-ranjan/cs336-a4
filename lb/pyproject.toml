@@ -17,5 +17,6 @@ dependencies = [
 	# "lxml",
 	"huggingface_hub",
 	"fasttext @ git+https://github.com/facebookresearch/fastText"
+	"nltk",
 ]
 
