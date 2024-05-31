@@ -5,9 +5,9 @@ torchrun \
 	--nnodes 1 \
 	--nproc_per_node 8 \
 	train.py \
-	--train-path /dev/shm/cc-train/train.bin \
+	--train-path /dev/shm/cc-train/train-random_dup.bin \
 	--dev-path /dev/shm/cc-train/val.bin \
-	--output-dir /dev/shm/cc-train \
+	--output-dir /dev/shm/cc-train/output-random_dup \
 	--vocab-size 50257 \
 	--context-length 512 \
 	--d-model 768 \
