@@ -2,6 +2,7 @@ from concurrent.futures import ProcessPoolExecutor
 import multiprocessing as mp
 import os
 from pathlib import Path
+import random
 
 from fasttext.FastText import _FastText
 import mmh3
@@ -15,9 +16,6 @@ def initializer():
     with open("/dev/shm/cc/hash_count_255.bin", "rb") as in_f:
         hash_count = in_f.read()
 
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"
-
     english_model = _FastText(model_path="/dev/shm/cc/models/lid.176.bin")
     toxic_model = _FastText(
         model_path="/dev/shm/cc/models/jigsaw_fasttext_bigrams_hatespeech_final.bin"
@@ -27,10 +25,16 @@ def initializer():
     )
 
 
-def is_dup(line_bytes):
+def is_dup(line_bytes, random_dup):
     line_hash = mmh3.hash(line_bytes)
     count = hash_count[line_hash]
-    return count >= 5
+    if random_dup:
+        if count == 255:
+            return True
+        rand = random.randrange(count)
+        return rand > 0
+    else:
+        return count >= 5
 
 
 def is_toxic(line):
@@ -98,7 +102,7 @@ def is_high_quality(doc):
     return True
 
 
-def worker(in_file, out_file, tqdm_disable=False):
+def worker(in_file, out_file, random_dup, tqdm_disable=False):
     Path(out_file).parent.mkdir(parents=True, exist_ok=True)
     in_file_size = Path(in_file).stat().st_size
     with open(in_file, "rb") as in_f, open(out_file, "w") as out_f, tqdm(
@@ -126,7 +130,7 @@ def worker(in_file, out_file, tqdm_disable=False):
                 out_f.write(doc)
                 out_f.write("<|endoftext|>\n")
             else:
-                if is_dup(line_bytes):
+                if is_dup(line_bytes, random_dup):
                     continue
 
                 if last_line_bytes is not None and last_line_bytes.strip().startswith(
@@ -150,7 +154,7 @@ def worker(in_file, out_file, tqdm_disable=False):
                 buf += line
 
 
-def master(in_dir, out_dir, max_workers=None):
+def master(in_dir, out_dir, random_dup, max_workers=None):
     if max_workers is None:
         max_workers = os.cpu_count()
 
@@ -160,6 +164,9 @@ def master(in_dir, out_dir, max_workers=None):
         # context has already been set
         pass
 
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
     in_files = list(Path(in_dir).iterdir())
     with ProcessPoolExecutor(
         max_workers=max_workers, initializer=initializer
@@ -167,7 +174,7 @@ def master(in_dir, out_dir, max_workers=None):
         futures = []
         for in_file in tqdm(in_files, "submit"):
             out_file = f"{out_dir}/{in_file.name}"
-            future = executor.submit(worker, in_file, out_file, True)
+            future = executor.submit(worker, in_file, out_file, random_dup, True)
             futures.append(future)
 
         for future in tqdm(futures, "result"):
