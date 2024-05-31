@@ -2,3 +2,4 @@ regex
 torch==2.3
 numpy
 wandb
+tqdm
