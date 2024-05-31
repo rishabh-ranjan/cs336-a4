@@ -68,6 +68,7 @@ def train(
     compile,
     dtype,
     wandb_project,
+    seed,
 ):
     train_data = np.memmap(train_path, dtype=np.uint16, mode="r")
     dev_data = np.memmap(dev_path, dtype=np.uint16, mode="r")
@@ -91,11 +92,10 @@ def train(
         ddp_world_size = int(os.environ["WORLD_SIZE"])
         device = f"cuda:{ddp_local_rank}"
         torch.cuda.set_device(device)
-        seed = ddp_rank  # each process gets a different seed
+        seed = seed + ddp_rank  # each process gets a different seed
         # Rank 0 does logging, file creation, etc.
         is_master_process = ddp_rank == 0
     else:
-        seed = 0
         ddp_world_size = 1
         is_master_process = True
 
@@ -471,6 +471,12 @@ if __name__ == "__main__":
         type=str,
         help="If set, log results to the specified wandb project",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed to use for training",
+    )
     args = parser.parse_args()
 
     is_ddp = int(os.environ.get("RANK", -1)) != -1
@@ -526,5 +532,6 @@ if __name__ == "__main__":
         args.compile,
         args.dtype,
         args.wandb_project,
+        args.seed,
     )
     logger.info("finished running %s", sys.argv[0])

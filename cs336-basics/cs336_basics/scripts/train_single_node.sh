@@ -27,4 +27,5 @@ torchrun \
 	--grad-clip 1.0 \
 	--dtype bfloat16 \
 	--wandb-project cc-train \
-	--compile
+	--compile \
+	--seed 42
