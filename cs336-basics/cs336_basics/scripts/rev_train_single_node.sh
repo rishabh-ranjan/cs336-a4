@@ -4,10 +4,10 @@ torchrun \
 	--standalone \
 	--nnodes 1 \
 	--nproc_per_node 4 \
-	train.py \
+	train_rev.py \
 	--train-path /lfs/local/0/ranjanr/cc-train/train.bin \
 	--dev-path /lfs/local/0/ranjanr/cc-train/val.bin \
-	--output-dir /lfs/local/0/ranjanr/cc-train/output \
+	--output-dir /lfs/local/0/ranjanr/cc-train/rev_output \
 	--vocab-size 50257 \
 	--context-length 512 \
 	--d-model 768 \
